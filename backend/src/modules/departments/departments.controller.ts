@@ -15,41 +15,39 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { RolesGuard } from '../../common/guards/roles.guard.js';
 import { Roles } from '../../common/decorators/roles.decorator.js';
 
-import { UserRole } from './entities/user.entity.js';
-import { UsersService } from './users.service.js';
+import { UserRole } from '../users/entities/user.entity.js';
 
-import { CreateUserDto } from './dto/create-user.dto.js';
-import { UpdateUserDto } from './dto/update-user.dto.js';
+import { DepartmentsService } from './departments.service.js';
+import { CreateDepartmentDto } from './dto/create-department.dto.js';
+import { UpdateDepartmentDto } from './dto/update-department.dto.js';
 
-@Controller('users')
+@Controller('departments')
 @UseGuards(JwtAuthGuard, RolesGuard)
-export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+export class DepartmentsController {
+  constructor(private readonly departmentsService: DepartmentsService) {}
 
   @Post()
   @Roles(UserRole.ADMIN, UserRole.HR)
   create(
     @CurrentUser() user: AuthenticatedUser,
-    @Body() createUserDto: CreateUserDto,
+    @Body() createDepartmentDto: CreateDepartmentDto,
   ) {
-    return this.usersService.create(
+    return this.departmentsService.create(
       user.organizationId,
-      createUserDto.email,
-      createUserDto.password,
-      createUserDto.role,
+      createDepartmentDto,
     );
   }
 
   @Get()
-  @Roles(UserRole.ADMIN, UserRole.HR)
+  @Roles(UserRole.ADMIN, UserRole.HR, UserRole.MANAGER, UserRole.EMPLOYEE)
   findAll(@CurrentUser() user: AuthenticatedUser) {
-    return this.usersService.findAll(user.organizationId);
+    return this.departmentsService.findAll(user.organizationId);
   }
 
   @Get(':id')
-  @Roles(UserRole.ADMIN, UserRole.HR)
+  @Roles(UserRole.ADMIN, UserRole.HR, UserRole.MANAGER, UserRole.EMPLOYEE)
   findOne(@CurrentUser() user: AuthenticatedUser, @Param('id') id: string) {
-    return this.usersService.findOne(user.organizationId, id);
+    return this.departmentsService.findOne(user.organizationId, id);
   }
 
   @Patch(':id')
@@ -57,25 +55,24 @@ export class UsersController {
   update(
     @CurrentUser() user: AuthenticatedUser,
     @Param('id') id: string,
-    @Body() updateUserDto: UpdateUserDto,
+    @Body() updateDepartmentDto: UpdateDepartmentDto,
   ) {
-    return this.usersService.update(
+    return this.departmentsService.update(
       user.organizationId,
       id,
-      user.userId,
-      updateUserDto,
+      updateDepartmentDto,
     );
   }
 
   @Patch(':id/deactivate')
   @Roles(UserRole.ADMIN, UserRole.HR)
   deactivate(@CurrentUser() user: AuthenticatedUser, @Param('id') id: string) {
-    return this.usersService.deactivate(user.organizationId, id, user.userId);
+    return this.departmentsService.deactivate(user.organizationId, id);
   }
 
   @Patch(':id/activate')
   @Roles(UserRole.ADMIN, UserRole.HR)
   activate(@CurrentUser() user: AuthenticatedUser, @Param('id') id: string) {
-    return this.usersService.activate(user.organizationId, id);
+    return this.departmentsService.activate(user.organizationId, id);
   }
 }
