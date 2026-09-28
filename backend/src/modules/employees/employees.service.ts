@@ -170,6 +170,21 @@ export class EmployeesService {
     return employee;
   }
 
+  async findByUserId(
+    organizationId: string,
+    userId: string,
+  ): Promise<Employee | null> {
+    return this.employeesRepository.findOne({
+      where: {
+        organizationId,
+        userId,
+      },
+      relations: {
+        subordinates: true,
+      },
+    });
+  }
+
   async update(
     organizationId: string,
     id: string,
