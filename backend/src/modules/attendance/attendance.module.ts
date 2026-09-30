@@ -7,9 +7,13 @@ import { AttendanceService } from './attendance.service.js';
 import { Attendance } from './entities/attendance.entity.js';
 import { Employee } from '../employees/entities/employee.entity.js';
 import { EmployeesModule } from '../employees/employees.module.js';
+import { Holiday } from '../holidays/entities/holiday.entity.js';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Attendance, Employee]), EmployeesModule],
+  imports: [
+    TypeOrmModule.forFeature([Attendance, Employee, Holiday]),
+    EmployeesModule,
+  ],
   controllers: [AttendanceController],
   providers: [AttendanceService],
   exports: [AttendanceService],

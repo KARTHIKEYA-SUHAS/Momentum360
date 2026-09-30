@@ -1,8 +1,4 @@
-import {
-  IsOptional,
-  IsString,
-  Length,
-} from 'class-validator';
+import { IsOptional, IsString, Length, MaxLength } from 'class-validator';
 
 export class CreateDepartmentDto {
   @IsString()
@@ -15,5 +11,6 @@ export class CreateDepartmentDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(2000)
   description?: string;
 }

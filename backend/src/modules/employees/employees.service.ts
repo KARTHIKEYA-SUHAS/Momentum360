@@ -63,22 +63,7 @@ export class EmployeesService {
     }
 
     if (managerId) {
-      const manager = await this.employeesRepository.findOne({
-        where: {
-          id: managerId,
-          organizationId,
-        },
-      });
-
-      if (!manager) {
-        throw new NotFoundException('Manager not found');
-      }
-
-      if (!manager.isActive) {
-        throw new ConflictException(
-          'Cannot assign an inactive employee as manager',
-        );
-      }
+      await this.validateManagerAssignment(organizationId, null, managerId);
     }
 
     if (userId) {
@@ -227,26 +212,11 @@ export class EmployeesService {
     }
 
     if (updateEmployeeDto.managerId) {
-      if (updateEmployeeDto.managerId === employee.id) {
-        throw new ConflictException('An employee cannot be their own manager');
-      }
-
-      const manager = await this.employeesRepository.findOne({
-        where: {
-          id: updateEmployeeDto.managerId,
-          organizationId,
-        },
-      });
-
-      if (!manager) {
-        throw new NotFoundException('Manager not found');
-      }
-
-      if (!manager.isActive) {
-        throw new ConflictException(
-          'Cannot assign an inactive employee as manager',
-        );
-      }
+      await this.validateManagerAssignment(
+        organizationId,
+        employee.id,
+        updateEmployeeDto.managerId,
+      );
     }
 
     if (updateEmployeeDto.userId) {
@@ -295,5 +265,83 @@ export class EmployeesService {
     employee.status = EmploymentStatus.ACTIVE;
 
     return this.employeesRepository.save(employee);
+  }
+
+  private async validateManagerAssignment(
+    organizationId: string,
+    employeeId: string | null,
+    managerId: string,
+  ): Promise<void> {
+    /*
+     * Prevent self-management
+     */
+    if (employeeId && managerId === employeeId) {
+      throw new ConflictException('An employee cannot be their own manager');
+    }
+
+    /*
+     * Find proposed manager
+     */
+    const manager = await this.employeesRepository.findOne({
+      where: {
+        id: managerId,
+        organizationId,
+      },
+    });
+
+    if (!manager) {
+      throw new NotFoundException('Manager not found');
+    }
+
+    /*
+     * Manager must be active
+     */
+    if (!manager.isActive) {
+      throw new ConflictException(
+        'Cannot assign an inactive employee as manager',
+      );
+    }
+
+    /*
+     * Walk through the manager hierarchy
+     * to detect circular relationships.
+     */
+    let currentManagerId = manager.managerId;
+
+    while (currentManagerId) {
+      /*
+       * If we reach the employee being updated,
+       * assigning this manager would create:
+       *
+       * A → B → C → A
+       */
+      if (employeeId && currentManagerId === employeeId) {
+        throw new ConflictException(
+          'Manager assignment would create a reporting hierarchy cycle',
+        );
+      }
+
+      const currentManager = await this.employeesRepository.findOne({
+        where: {
+          id: currentManagerId,
+          organizationId,
+        },
+
+        select: {
+          id: true,
+          managerId: true,
+        },
+      });
+
+      /*
+       * If the referenced manager no longer exists,
+       * stop traversing the hierarchy.
+       */
+      if (!currentManager) {
+        break;
+      }
+
+      currentManagerId = currentManager.managerId;
+    }
   }
 }

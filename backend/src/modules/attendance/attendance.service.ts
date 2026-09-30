@@ -16,6 +16,9 @@ import { UpdateAttendanceDto } from './dto/update-attendance.dto.js';
 import { EmployeesService } from '../employees/employees.service.js';
 import { UserRole } from '../users/entities/user.entity.js';
 
+import { Holiday } from '../holidays/entities/holiday.entity.js';
+// import { HolidaysModule } from '../holidays/holidays.module.js';
+
 @Injectable()
 export class AttendanceService {
   constructor(
@@ -24,6 +27,9 @@ export class AttendanceService {
 
     @InjectRepository(Employee)
     private readonly employeesRepository: Repository<Employee>,
+
+    @InjectRepository(Holiday)
+    private readonly holidaysRepository: Repository<Holiday>,
 
     private readonly employeesService: EmployeesService,
   ) {}
@@ -106,6 +112,17 @@ export class AttendanceService {
     }
 
     const today = new Date().toISOString().split('T')[0];
+
+    const isHoliday = await this.isActiveHoliday(
+      organizationId,
+      today,
+    );
+
+    if (isHoliday) {
+      throw new ConflictException(
+        'Check-in is not allowed on an active holiday',
+      );
+    }
 
     const existingAttendance = await this.attendanceRepository.findOne({
       where: {
@@ -417,5 +434,20 @@ export class AttendanceService {
         );
       }
     }
+  }
+
+  private async isActiveHoliday(
+    organizationId: string,
+    attendanceDate: string,
+  ): Promise<boolean> {
+    const holiday = await this.holidaysRepository.findOne({
+      where: {
+        organizationId,
+        date: attendanceDate,
+        isActive: true,
+      },
+    });
+
+    return !!holiday;
   }
 }

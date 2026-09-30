@@ -9,6 +9,8 @@ import { EmployeesModule } from './modules/employees/employees.module.js';
 import { DepartmentsModule } from './modules/departments/departments.module.js';
 import { AttendanceModule } from './modules/attendance/attendance.module.js';
 import { LeaveModule } from './modules/leave/leave.module.js';
+import { HolidaysModule } from './modules/holidays/holidays.module.js';
+import { DashboardModule } from './modules/dashboard/dashboard.module.js';
 
 @Module({
   imports: [
@@ -38,6 +40,8 @@ import { LeaveModule } from './modules/leave/leave.module.js';
     DepartmentsModule,
     AttendanceModule,
     LeaveModule,
+    HolidaysModule,
+    DashboardModule,
   ],
 })
 export class AppModule {}

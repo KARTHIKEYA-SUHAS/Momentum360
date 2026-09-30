@@ -23,7 +23,8 @@
     "migration:generate": "node --loader ts-node/esm ./node_modules/typeorm/cli.js -d src/database/typeorm.config.ts migration:generate",
     "migration:run": "node --loader ts-node/esm ./node_modules/typeorm/cli.js -d src/database/typeorm.config.ts migration:run",
     "migration:revert": "node --loader ts-node/esm ./node_modules/typeorm/cli.js -d src/database/typeorm.config.ts migration:revert",
-    "seed:initial-admin": "node --loader ts-node/esm src/database/seeds/initial-admin.seed.ts"
+    "seed:initial-admin": "node --loader ts-node/esm src/database/seeds/initial-admin.seed.ts",
+    "seed": "node --loader ts-node/esm ./src/database/seeds/seed.ts"
   },
   "dependencies": {
     "@nestjs/common": "^12.0.1",
