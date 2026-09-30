@@ -22,6 +22,9 @@ import { Roles } from '../../common/decorators/roles.decorator.js';
 
 import { UserRole } from '../users/entities/user.entity.js';
 
+import { ApiBearerAuth } from '@nestjs/swagger';
+
+@ApiBearerAuth('access-token')
 @Controller('leaves')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class LeaveController {

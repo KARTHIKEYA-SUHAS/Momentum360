@@ -21,6 +21,9 @@ import { EmployeesService } from './employees.service.js';
 import { CreateEmployeeDto } from './dto/create-employee.dto.js';
 import { UpdateEmployeeDto } from './dto/update-employee.dto.js';
 
+import { ApiBearerAuth } from '@nestjs/swagger';
+
+@ApiBearerAuth('access-token')
 @Controller('employees')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class EmployeesController {

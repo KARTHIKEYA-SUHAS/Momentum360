@@ -1,4 +1,11 @@
 import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
+
+import {
   Body,
   Controller,
   Get,
@@ -21,11 +28,23 @@ import { UsersService } from './users.service.js';
 import { CreateUserDto } from './dto/create-user.dto.js';
 import { UpdateUserDto } from './dto/update-user.dto.js';
 
+@ApiTags('Users')
+@ApiBearerAuth('access-token')
+@Controller('users')
 @Controller('users')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
+  @ApiOperation({ summary: 'Create a user' })
+  @ApiResponse({
+    status: 201,
+    description: 'User created successfully',
+  })
+  @ApiResponse({
+    status: 409,
+    description: 'User already exists',
+  })
   @Post()
   @Roles(UserRole.ADMIN, UserRole.HR)
   create(
@@ -40,18 +59,41 @@ export class UsersController {
     );
   }
 
+  @ApiOperation({ summary: 'List users' })
+  @ApiResponse({
+    status: 200,
+    description: 'Users retrieved successfully',
+  })
   @Get()
   @Roles(UserRole.ADMIN, UserRole.HR)
   findAll(@CurrentUser() user: AuthenticatedUser) {
     return this.usersService.findAll(user.organizationId);
   }
 
+  @ApiOperation({ summary: 'Get user by ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'User retrieved successfully',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'User not found',
+  })
   @Get(':id')
   @Roles(UserRole.ADMIN, UserRole.HR)
   findOne(@CurrentUser() user: AuthenticatedUser, @Param('id') id: string) {
     return this.usersService.findOne(user.organizationId, id);
   }
 
+  @ApiOperation({ summary: 'Update user' })
+  @ApiResponse({
+    status: 200,
+    description: 'User updated successfully',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'User not found',
+  })
   @Patch(':id')
   @Roles(UserRole.ADMIN, UserRole.HR)
   update(
@@ -67,12 +109,14 @@ export class UsersController {
     );
   }
 
+  @ApiOperation({ summary: 'Deactivate user' })
   @Patch(':id/deactivate')
   @Roles(UserRole.ADMIN, UserRole.HR)
   deactivate(@CurrentUser() user: AuthenticatedUser, @Param('id') id: string) {
     return this.usersService.deactivate(user.organizationId, id, user.userId);
   }
 
+  @ApiOperation({ summary: 'Activate user' })
   @Patch(':id/activate')
   @Roles(UserRole.ADMIN, UserRole.HR)
   activate(@CurrentUser() user: AuthenticatedUser, @Param('id') id: string) {

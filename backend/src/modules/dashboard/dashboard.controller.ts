@@ -9,6 +9,9 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 import { UserRole } from '../users/entities/user.entity.js';
 import type { AuthenticatedUser } from '../../common/decorators/current-user.decorator.js';
 
+import { ApiBearerAuth } from '@nestjs/swagger';
+
+@ApiBearerAuth('access-token')
 @Controller('dashboard')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class DashboardController {
