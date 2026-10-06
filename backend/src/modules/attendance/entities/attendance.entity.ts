@@ -13,6 +13,8 @@ import { Organization } from '../../organizations/entities/organization.entity.j
 import { Employee } from '../../employees/entities/employee.entity.js';
 import { User } from '../../users/entities/user.entity.js';
 
+import { WorkMode } from '../../work-location/entities/team-work-location-assignment.entity.js';
+
 export enum AttendanceStatus {
   PRESENT = 'PRESENT',
   ABSENT = 'ABSENT',
@@ -78,6 +80,32 @@ export class Attendance {
     nullable: true,
   })
   checkOut: Date | null;
+
+  @Column({
+    name: 'work_mode',
+    type: 'enum',
+    enum: WorkMode,
+    nullable: true,
+  })
+  workMode: WorkMode | null;
+
+  @Column({
+    name: 'check_in_latitude',
+    type: 'decimal',
+    precision: 10,
+    scale: 7,
+    nullable: true,
+  })
+  checkInLatitude: number | null;
+
+  @Column({
+    name: 'check_in_longitude',
+    type: 'decimal',
+    precision: 10,
+    scale: 7,
+    nullable: true,
+  })
+  checkInLongitude: number | null;
 
   @ManyToOne(() => User, {
     nullable: true,

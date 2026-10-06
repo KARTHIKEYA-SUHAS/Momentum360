@@ -11,6 +11,7 @@ import {
 import { AttendanceService } from './attendance.service.js';
 import { CreateAttendanceDto } from './dto/create-attendance.dto.js';
 import { UpdateAttendanceDto } from './dto/update-attendance.dto.js';
+import { CheckInDto } from './dto/check-in.dto.js';
 
 import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 import type { AuthenticatedUser } from '../../common/decorators/current-user.decorator.js';
@@ -44,8 +45,15 @@ export class AttendanceController {
 
   @Post('check-in')
   @Roles(UserRole.EMPLOYEE, UserRole.MANAGER)
-  checkIn(@CurrentUser() user: AuthenticatedUser) {
-    return this.attendanceService.checkIn(user.organizationId, user.userId);
+  checkIn(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() checkInDto: CheckInDto,
+  ) {
+    return this.attendanceService.checkIn(
+      user.organizationId,
+      user.userId,
+      checkInDto,
+    );
   }
 
   @Post('check-out')

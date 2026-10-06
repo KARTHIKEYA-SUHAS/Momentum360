@@ -16,6 +16,8 @@ import { Department } from '../departments/entities/department.entity.js';
 
 import { User } from '../users/entities/user.entity.js';
 
+import { EmployeeReportingManager } from './entities/employee-reporting-manager.entity.js';
+
 @Injectable()
 export class EmployeesService {
   constructor(
@@ -27,6 +29,9 @@ export class EmployeesService {
 
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
+
+    @InjectRepository(EmployeeReportingManager)
+    private readonly reportingManagersRepository: Repository<EmployeeReportingManager>,
   ) {}
 
   async create(organizationId: string, createEmployeeDto: CreateEmployeeDto) {
@@ -165,9 +170,131 @@ export class EmployeesService {
         userId,
       },
       relations: {
+        manager: true,
         subordinates: true,
       },
     });
+  }
+
+  async addReportingManager(
+    organizationId: string,
+    employeeId: string,
+    reportingManagerId: string,
+  ) {
+    if (employeeId === reportingManagerId) {
+      throw new ConflictException(
+        'An employee cannot be their own reporting manager',
+      );
+    }
+
+    const employee = await this.employeesRepository.findOne({
+      where: {
+        id: employeeId,
+        organizationId,
+      },
+    });
+
+    if (!employee) {
+      throw new NotFoundException('Employee not found');
+    }
+
+    const reportingManager = await this.employeesRepository.findOne({
+      where: {
+        id: reportingManagerId,
+        organizationId,
+      },
+    });
+
+    if (!reportingManager) {
+      throw new NotFoundException('Reporting manager not found');
+    }
+
+    if (!reportingManager.isActive) {
+      throw new ConflictException(
+        'Cannot assign an inactive employee as reporting manager',
+      );
+    }
+
+    const existingRelationship = await this.reportingManagersRepository.findOne(
+      {
+        where: {
+          employeeId,
+          reportingManagerId,
+        },
+      },
+    );
+
+    if (existingRelationship) {
+      throw new ConflictException(
+        'This reporting manager is already assigned to the employee',
+      );
+    }
+
+    const relationship = this.reportingManagersRepository.create({
+      employeeId,
+      reportingManagerId,
+    });
+
+    return this.reportingManagersRepository.save(relationship);
+  }
+
+  async getReportingManagers(organizationId: string, employeeId: string) {
+    const employee = await this.employeesRepository.findOne({
+      where: {
+        id: employeeId,
+        organizationId,
+      },
+    });
+
+    if (!employee) {
+      throw new NotFoundException('Employee not found');
+    }
+
+    return this.reportingManagersRepository.find({
+      where: {
+        employeeId,
+      },
+      relations: {
+        reportingManager: true,
+      },
+      order: {
+        createdAt: 'ASC',
+      },
+    });
+  }
+
+  async removeReportingManager(
+    organizationId: string,
+    employeeId: string,
+    reportingManagerId: string,
+  ) {
+    const employee = await this.employeesRepository.findOne({
+      where: {
+        id: employeeId,
+        organizationId,
+      },
+    });
+
+    if (!employee) {
+      throw new NotFoundException('Employee not found');
+    }
+
+    const relationship = await this.reportingManagersRepository.findOne({
+      where: {
+        employeeId,
+        reportingManagerId,
+      },
+    });
+
+    if (!relationship) {
+      throw new NotFoundException('Reporting manager relationship not found');
+    }
+
+    await this.reportingManagersRepository.remove(relationship);
+
+    return {
+      message: 'Reporting manager removed successfully',
+    };
   }
 
   async update(

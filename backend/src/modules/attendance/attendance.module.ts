@@ -9,10 +9,13 @@ import { Employee } from '../employees/entities/employee.entity.js';
 import { EmployeesModule } from '../employees/employees.module.js';
 import { Holiday } from '../holidays/entities/holiday.entity.js';
 
+import { WorkLocationModule } from '../work-location/work-location.module.js';
+
 @Module({
   imports: [
     TypeOrmModule.forFeature([Attendance, Employee, Holiday]),
     EmployeesModule,
+    WorkLocationModule,
   ],
   controllers: [AttendanceController],
   providers: [AttendanceService],

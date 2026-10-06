@@ -11,6 +11,7 @@ import { AttendanceModule } from './modules/attendance/attendance.module.js';
 import { LeaveModule } from './modules/leave/leave.module.js';
 import { HolidaysModule } from './modules/holidays/holidays.module.js';
 import { DashboardModule } from './modules/dashboard/dashboard.module.js';
+import { WorkLocationModule } from './modules/work-location/work-location.module.js';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { DashboardModule } from './modules/dashboard/dashboard.module.js';
     LeaveModule,
     HolidaysModule,
     DashboardModule,
+    WorkLocationModule,
   ],
 })
 export class AppModule {}

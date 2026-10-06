@@ -5,6 +5,7 @@ import {
   Param,
   Patch,
   Post,
+  Delete,
   UseGuards,
 } from '@nestjs/common';
 
@@ -74,5 +75,42 @@ export class EmployeesController {
   @Roles(UserRole.ADMIN, UserRole.HR)
   activate(@CurrentUser() user: AuthenticatedUser, @Param('id') id: string) {
     return this.employeesService.activate(user.organizationId, id);
+  }
+
+  @Post(':id/reporting-managers/:managerId')
+  @Roles(UserRole.ADMIN, UserRole.HR)
+  addReportingManager(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id') id: string,
+    @Param('managerId') managerId: string,
+  ) {
+    return this.employeesService.addReportingManager(
+      user.organizationId,
+      id,
+      managerId,
+    );
+  }
+
+  @Get(':id/reporting-managers')
+  @Roles(UserRole.ADMIN, UserRole.HR, UserRole.MANAGER, UserRole.EMPLOYEE)
+  getReportingManagers(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id') id: string,
+  ) {
+    return this.employeesService.getReportingManagers(user.organizationId, id);
+  }
+
+  @Delete(':id/reporting-managers/:managerId')
+  @Roles(UserRole.ADMIN, UserRole.HR)
+  removeReportingManager(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id') id: string,
+    @Param('managerId') managerId: string,
+  ) {
+    return this.employeesService.removeReportingManager(
+      user.organizationId,
+      id,
+      managerId,
+    );
   }
 }

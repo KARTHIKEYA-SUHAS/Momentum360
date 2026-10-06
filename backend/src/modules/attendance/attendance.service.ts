@@ -19,6 +19,10 @@ import { UserRole } from '../users/entities/user.entity.js';
 import { Holiday } from '../holidays/entities/holiday.entity.js';
 // import { HolidaysModule } from '../holidays/holidays.module.js';
 
+import { WorkLocationService } from '../work-location/work-location.service.js';
+import { CheckInDto } from './dto/check-in.dto.js';
+import { WorkMode } from '../work-location/entities/team-work-location-assignment.entity.js';
+
 @Injectable()
 export class AttendanceService {
   constructor(
@@ -32,6 +36,8 @@ export class AttendanceService {
     private readonly holidaysRepository: Repository<Holiday>,
 
     private readonly employeesService: EmployeesService,
+
+    private readonly workLocationService: WorkLocationService,
   ) {}
 
   async create(
@@ -95,7 +101,7 @@ export class AttendanceService {
     );
   }
 
-  async checkIn(organizationId: string, userId: string) {
+  async checkIn(organizationId: string, userId: string, data: CheckInDto) {
     const employee = await this.employeesService.findByUserId(
       organizationId,
       userId,
@@ -113,10 +119,41 @@ export class AttendanceService {
 
     const today = new Date().toISOString().split('T')[0];
 
-    const isHoliday = await this.isActiveHoliday(
-      organizationId,
-      today,
-    );
+    const effectiveWorkLocation =
+      await this.workLocationService.getEffectiveWorkLocation(
+        organizationId,
+        employee.id,
+        today,
+      );
+
+    if (effectiveWorkLocation.workMode === WorkMode.OFFICE) {
+      if (data.latitude === undefined || data.longitude === undefined) {
+        throw new ConflictException(
+          'GPS location is required for office check-in',
+        );
+      }
+
+      if (!effectiveWorkLocation.officeLocation) {
+        throw new ConflictException(
+          'Office location is not configured for this employee',
+        );
+      }
+
+      const distance = this.calculateDistanceInMeters(
+        data.latitude,
+        data.longitude,
+        Number(effectiveWorkLocation.officeLocation.latitude),
+        Number(effectiveWorkLocation.officeLocation.longitude),
+      );
+
+      if (distance > effectiveWorkLocation.officeLocation.radiusMeters) {
+        throw new ConflictException(
+          'You are outside the allowed office location',
+        );
+      }
+    }
+
+    const isHoliday = await this.isActiveHoliday(organizationId, today);
 
     if (isHoliday) {
       throw new ConflictException(
@@ -142,6 +179,9 @@ export class AttendanceService {
       status: AttendanceStatus.PRESENT,
       checkIn: new Date(),
       checkOut: null,
+      workMode: effectiveWorkLocation.workMode,
+      checkInLatitude: data.latitude ?? null,
+      checkInLongitude: data.longitude ?? null,
       markedByUserId: userId,
     });
 
@@ -449,5 +489,29 @@ export class AttendanceService {
     });
 
     return !!holiday;
+  }
+
+  private calculateDistanceInMeters(
+    latitude1: number,
+    longitude1: number,
+    latitude2: number,
+    longitude2: number,
+  ): number {
+    const earthRadius = 6371000;
+
+    const lat1 = (latitude1 * Math.PI) / 180;
+    const lat2 = (latitude2 * Math.PI) / 180;
+
+    const deltaLatitude = ((latitude2 - latitude1) * Math.PI) / 180;
+
+    const deltaLongitude = ((longitude2 - longitude1) * Math.PI) / 180;
+
+    const a =
+      Math.sin(deltaLatitude / 2) ** 2 +
+      Math.cos(lat1) * Math.cos(lat2) * Math.sin(deltaLongitude / 2) ** 2;
+
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+    return earthRadius * c;
   }
 }

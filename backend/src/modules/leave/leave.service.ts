@@ -10,6 +10,7 @@ import { Leave, LeaveStatus } from './entities/leave.entity.js';
 
 import { Employee } from '../employees/entities/employee.entity.js';
 import { EmployeesService } from '../employees/employees.service.js';
+import { EmployeeReportingManager } from '../employees/entities/employee-reporting-manager.entity.js';
 
 import { CreateLeaveDto } from './dto/create-leave.dto.js';
 import { UpdateLeaveDto } from './dto/update-leave.dto.js';
@@ -21,6 +22,9 @@ export class LeaveService {
     private readonly leaveRepository: Repository<Leave>,
 
     private readonly employeesService: EmployeesService,
+
+    @InjectRepository(EmployeeReportingManager)
+    private readonly reportingManagersRepository: Repository<EmployeeReportingManager>,
   ) {}
 
   private calculateLeaveDays(startDate: string, endDate: string): number {
@@ -175,21 +179,38 @@ export class LeaveService {
     }
 
     if (role === 'MANAGER') {
-      const employee = await this.employeesService.findByUserId(
+      const manager = await this.employeesService.findByUserId(
         organizationId,
         userId,
       );
 
-      if (!employee) {
+      if (!manager) {
         throw new NotFoundException('Employee profile not found for this user');
       }
 
       const subordinateIds =
-        employee.subordinates?.map((subordinate) => subordinate.id) ?? [];
+        manager.subordinates?.map((subordinate) => subordinate.id) ?? [];
 
-      const employeeIds = [employee.id, ...subordinateIds];
+      const reportingManagerRelations =
+        await this.reportingManagersRepository.find({
+          where: {
+            reportingManagerId: manager.id,
+          },
+        });
 
-      query.andWhere('leave.employee_id IN (:...employeeIds)', { employeeIds });
+      const reportingEmployeeIds = reportingManagerRelations.map(
+        (relationship) => relationship.employeeId,
+      );
+
+      const employeeIds = [
+        manager.id,
+        ...subordinateIds,
+        ...reportingEmployeeIds,
+      ];
+
+      query.andWhere('leave.employee_id IN (:...employeeIds)', {
+        employeeIds,
+      });
 
       return query.orderBy('leave.start_date', 'DESC').getMany();
     }
