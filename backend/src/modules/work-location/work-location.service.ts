@@ -23,6 +23,9 @@ import { CreateTeamWorkLocationAssignmentDto } from './dto/create-team-work-loca
 
 import { Employee } from '../employees/entities/employee.entity.js';
 import { UserRole } from '../users/entities/user.entity.js';
+import { User } from '../users/entities/user.entity.js';
+
+import { NotificationsService } from '../notifications/notifications.service.js';
 
 @Injectable()
 export class WorkLocationService {
@@ -38,6 +41,11 @@ export class WorkLocationService {
 
     @InjectRepository(EmployeeWorkLocationOverride)
     private readonly employeeOverridesRepository: Repository<EmployeeWorkLocationOverride>,
+
+    @InjectRepository(User)
+    private readonly usersRepository: Repository<User>,
+
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   async create(organizationId: string, dto: CreateOfficeLocationDto) {
@@ -211,7 +219,30 @@ export class WorkLocationService {
       isActive: true,
     });
 
-    return this.teamAssignmentsRepository.save(assignment);
+    const savedAssignment =
+      await this.teamAssignmentsRepository.save(assignment);
+
+    const teamEmployees = await this.employeesRepository.find({
+      where: {
+        organizationId,
+        managerId,
+        isActive: true,
+      },
+    });
+
+    for (const employee of teamEmployees) {
+      if (employee.userId) {
+        await this.notificationsService.create(
+          organizationId,
+          employee.userId,
+          'TEAM_WORK_LOCATION_ASSIGNED',
+          'Team Work Location Assigned',
+          `Your team's work location has been assigned as ${savedAssignment.workMode}.`,
+        );
+      }
+    }
+
+    return savedAssignment;
   }
 
   async findTeamAssignment(organizationId: string, managerId: string) {
@@ -284,7 +315,30 @@ export class WorkLocationService {
     assignment.workMode = dto.workMode;
     assignment.officeLocationId = dto.officeLocationId ?? null;
 
-    return this.teamAssignmentsRepository.save(assignment);
+    const savedAssignment =
+      await this.teamAssignmentsRepository.save(assignment);
+
+    const teamEmployees = await this.employeesRepository.find({
+      where: {
+        organizationId,
+        managerId,
+        isActive: true,
+      },
+    });
+
+    for (const employee of teamEmployees) {
+      if (employee.userId) {
+        await this.notificationsService.create(
+          organizationId,
+          employee.userId,
+          'TEAM_WORK_LOCATION_UPDATED',
+          'Team Work Location Updated',
+          `Your team's work location has been updated to ${savedAssignment.workMode}.`,
+        );
+      }
+    }
+
+    return savedAssignment;
   }
 
   async deactivateTeamAssignment(organizationId: string, managerId: string) {
@@ -389,7 +443,26 @@ export class WorkLocationService {
       isActive: true,
     });
 
-    return this.employeeOverridesRepository.save(override);
+    const savedOverride = await this.employeeOverridesRepository.save(override);
+
+    const employeeUser = await this.usersRepository.findOne({
+      where: {
+        id: employee.userId!,
+        organizationId,
+      },
+    });
+
+    if (employeeUser) {
+      await this.notificationsService.create(
+        organizationId,
+        employeeUser.id,
+        'WORK_LOCATION_OVERRIDE_CREATED',
+        'Work Location Updated',
+        `Your work location has been set to ${dto.workMode} from ${dto.startDate} to ${dto.endDate ?? 'permanent'}.`,
+      );
+    }
+
+    return savedOverride;
   }
 
   async getEffectiveWorkLocation(
@@ -558,6 +631,17 @@ export class WorkLocationService {
       throw new NotFoundException('Employee work location override not found');
     }
 
+    const employee = await this.employeesRepository.findOne({
+      where: {
+        id: override.employeeId,
+        organizationId,
+      },
+    });
+
+    if (!employee) {
+      throw new NotFoundException('Employee not found');
+    }
+
     if (role === UserRole.MANAGER) {
       const managerEmployee = await this.employeesRepository.findOne({
         where: {
@@ -569,17 +653,6 @@ export class WorkLocationService {
 
       if (!managerEmployee) {
         throw new ForbiddenException('Manager employee profile not found');
-      }
-
-      const employee = await this.employeesRepository.findOne({
-        where: {
-          id: override.employeeId,
-          organizationId,
-        },
-      });
-
-      if (!employee) {
-        throw new NotFoundException('Employee not found');
       }
 
       if (employee.managerId !== managerEmployee.id) {
@@ -661,7 +734,19 @@ export class WorkLocationService {
       override.isActive = dto.isActive;
     }
 
-    return this.employeeOverridesRepository.save(override);
+    const savedOverride = await this.employeeOverridesRepository.save(override);
+
+    if (employee.userId) {
+      await this.notificationsService.create(
+        organizationId,
+        employee.userId,
+        'WORK_LOCATION_OVERRIDE_UPDATED',
+        'Work Location Updated',
+        `Your work location has been updated to ${savedOverride.workMode} from ${savedOverride.startDate}.`,
+      );
+    }
+
+    return savedOverride;
   }
 
   async deactivateEmployeeOverride(

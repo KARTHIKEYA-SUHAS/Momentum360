@@ -8,6 +8,9 @@ import { TeamWorkLocationAssignment } from './entities/team-work-location-assign
 import { EmployeeWorkLocationOverride } from './entities/employee-work-location-override.entity.js';
 
 import { Employee } from '../employees/entities/employee.entity.js';
+import { User } from '../users/entities/user.entity.js';
+
+import { NotificationsModule } from '../notifications/notifications.module.js';
 
 @Module({
   imports: [
@@ -16,7 +19,9 @@ import { Employee } from '../employees/entities/employee.entity.js';
       TeamWorkLocationAssignment,
       Employee,
       EmployeeWorkLocationOverride,
+      User,
     ]),
+    NotificationsModule,
   ],
   controllers: [WorkLocationController],
   providers: [WorkLocationService],

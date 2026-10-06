@@ -18,7 +18,6 @@ export enum WorkMode {
   WFH = 'WFH',
 }
 
-@Unique(['organizationId', 'managerId'])
 @Entity('team_work_location_assignments')
 export class TeamWorkLocationAssignment {
   @PrimaryGeneratedColumn('uuid')
