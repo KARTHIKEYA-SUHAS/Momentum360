@@ -126,6 +126,12 @@ export class AttendanceService {
         today,
       );
 
+    if (!effectiveWorkLocation.workMode) {
+      throw new ConflictException(
+        'Work location is not assigned. Please contact your manager.',
+      );
+    }
+
     if (effectiveWorkLocation.workMode === WorkMode.OFFICE) {
       if (data.latitude === undefined || data.longitude === undefined) {
         throw new ConflictException(

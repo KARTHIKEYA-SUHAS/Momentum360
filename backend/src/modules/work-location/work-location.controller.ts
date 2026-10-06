@@ -148,6 +148,8 @@ export class WorkLocationController {
   ) {
     return this.workLocationService.createEmployeeOverride(
       user.organizationId,
+      user.userId,
+      user.role as UserRole,
       employeeId,
       dto,
     );
@@ -204,6 +206,8 @@ export class WorkLocationController {
   ) {
     return this.workLocationService.updateEmployeeOverride(
       user.organizationId,
+      user.userId,
+      user.role as UserRole,
       overrideId,
       dto,
     );
@@ -218,6 +222,8 @@ export class WorkLocationController {
   ) {
     return this.workLocationService.deactivateEmployeeOverride(
       user.organizationId,
+      user.userId,
+      user.role as UserRole,
       overrideId,
     );
   }
@@ -231,6 +237,8 @@ export class WorkLocationController {
   ) {
     return this.workLocationService.activateEmployeeOverride(
       user.organizationId,
+      user.userId,
+      user.role as UserRole,
       overrideId,
     );
   }

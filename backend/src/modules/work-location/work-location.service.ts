@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { ForbiddenException } from '@nestjs/common';
 
 import { OfficeLocation } from './entities/office-location.entity.js';
 import { CreateOfficeLocationDto } from './dto/create-office-location.dto.js';
@@ -21,6 +22,7 @@ import {
 import { CreateTeamWorkLocationAssignmentDto } from './dto/create-team-work-location-assignment.dto.js';
 
 import { Employee } from '../employees/entities/employee.entity.js';
+import { UserRole } from '../users/entities/user.entity.js';
 
 @Injectable()
 export class WorkLocationService {
@@ -311,6 +313,8 @@ export class WorkLocationService {
 
   async createEmployeeOverride(
     organizationId: string,
+    userId: string,
+    role: UserRole,
     employeeId: string,
     dto: CreateEmployeeWorkLocationOverrideDto,
   ) {
@@ -323,6 +327,26 @@ export class WorkLocationService {
 
     if (!employee) {
       throw new NotFoundException('Employee not found');
+    }
+
+    if (role === UserRole.MANAGER) {
+      const managerEmployee = await this.employeesRepository.findOne({
+        where: {
+          userId,
+          organizationId,
+          isActive: true,
+        },
+      });
+
+      if (!managerEmployee) {
+        throw new ForbiddenException('Manager employee profile not found');
+      }
+
+      if (employee.managerId !== managerEmployee.id) {
+        throw new ForbiddenException(
+          'You can manage work-location overrides only for your direct reports',
+        );
+      }
     }
 
     if (dto.workMode === WorkMode.OFFICE && !dto.officeLocationId) {
@@ -518,6 +542,8 @@ export class WorkLocationService {
 
   async updateEmployeeOverride(
     organizationId: string,
+    userId: string,
+    role: UserRole,
     overrideId: string,
     dto: UpdateEmployeeWorkLocationOverrideDto,
   ) {
@@ -530,6 +556,37 @@ export class WorkLocationService {
 
     if (!override) {
       throw new NotFoundException('Employee work location override not found');
+    }
+
+    if (role === UserRole.MANAGER) {
+      const managerEmployee = await this.employeesRepository.findOne({
+        where: {
+          userId,
+          organizationId,
+          isActive: true,
+        },
+      });
+
+      if (!managerEmployee) {
+        throw new ForbiddenException('Manager employee profile not found');
+      }
+
+      const employee = await this.employeesRepository.findOne({
+        where: {
+          id: override.employeeId,
+          organizationId,
+        },
+      });
+
+      if (!employee) {
+        throw new NotFoundException('Employee not found');
+      }
+
+      if (employee.managerId !== managerEmployee.id) {
+        throw new ForbiddenException(
+          'You can manage work-location overrides only for your direct reports',
+        );
+      }
     }
 
     const workMode = dto.workMode ?? override.workMode;
@@ -607,7 +664,12 @@ export class WorkLocationService {
     return this.employeeOverridesRepository.save(override);
   }
 
-  async deactivateEmployeeOverride(organizationId: string, overrideId: string) {
+  async deactivateEmployeeOverride(
+    organizationId: string,
+    userId: string,
+    role: UserRole,
+    overrideId: string,
+  ) {
     const override = await this.employeeOverridesRepository.findOne({
       where: {
         id: overrideId,
@@ -617,6 +679,37 @@ export class WorkLocationService {
 
     if (!override) {
       throw new NotFoundException('Employee work location override not found');
+    }
+
+    if (role === UserRole.MANAGER) {
+      const managerEmployee = await this.employeesRepository.findOne({
+        where: {
+          userId,
+          organizationId,
+          isActive: true,
+        },
+      });
+
+      if (!managerEmployee) {
+        throw new ForbiddenException('Manager employee profile not found');
+      }
+
+      const employee = await this.employeesRepository.findOne({
+        where: {
+          id: override.employeeId,
+          organizationId,
+        },
+      });
+
+      if (!employee) {
+        throw new NotFoundException('Employee not found');
+      }
+
+      if (employee.managerId !== managerEmployee.id) {
+        throw new ForbiddenException(
+          'You can manage work-location overrides only for your direct reports',
+        );
+      }
     }
 
     if (!override.isActive) {
@@ -630,7 +723,12 @@ export class WorkLocationService {
     return this.employeeOverridesRepository.save(override);
   }
 
-  async activateEmployeeOverride(organizationId: string, overrideId: string) {
+  async activateEmployeeOverride(
+    organizationId: string,
+    userId: string,
+    role: UserRole,
+    overrideId: string,
+  ) {
     const override = await this.employeeOverridesRepository.findOne({
       where: {
         id: overrideId,
@@ -646,6 +744,37 @@ export class WorkLocationService {
       throw new ConflictException(
         'Employee work location override is already active',
       );
+    }
+
+    if (role === UserRole.MANAGER) {
+      const managerEmployee = await this.employeesRepository.findOne({
+        where: {
+          userId,
+          organizationId,
+          isActive: true,
+        },
+      });
+
+      if (!managerEmployee) {
+        throw new ForbiddenException('Manager employee profile not found');
+      }
+
+      const employee = await this.employeesRepository.findOne({
+        where: {
+          id: override.employeeId,
+          organizationId,
+        },
+      });
+
+      if (!employee) {
+        throw new NotFoundException('Employee not found');
+      }
+
+      if (employee.managerId !== managerEmployee.id) {
+        throw new ForbiddenException(
+          'You can manage work-location overrides only for your direct reports',
+        );
+      }
     }
 
     override.isActive = true;
