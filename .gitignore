@@ -1,61 +1,117 @@
-.env
+# ==========================================
+# Dependencies
+# ==========================================
 
-# compiled output
-dist/
 node_modules/
-build/
 
-# TypeScript build cache
+
+# ==========================================
+# Environment Variables / Secrets
+# ==========================================
+
+.env
+.env.*
+!.env.example
+
+
+# ==========================================
+# Build Output
+# ==========================================
+
+dist/
+build/
+web-build/
+
+
+# ==========================================
+# Expo / React Native
+# ==========================================
+
+.expo/
+.expo-shared/
+
+# Expo native folders - only keep these ignored
+# if you are not committing native projects
+android/
+ios/
+
+
+# ==========================================
+# TypeScript
+# ==========================================
+
 *.tsbuildinfo
 
+
+# ==========================================
 # Logs
-logs
+# ==========================================
+
+logs/
 *.log
+
 npm-debug.log*
 pnpm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
 
-# OS
-.DS_Store
 
-# Tests
+# ==========================================
+# Testing / Coverage
+# ==========================================
+
 coverage/
 .nyc_output/
 
-# IDEs and editors
+
+# ==========================================
+# IDEs / Editors
+# ==========================================
+
 .idea/
 .project
 .classpath
 .c9/
 *.launch
 .settings/
+
+.vscode/
+
 *.sublime-workspace
 
-# IDE - VSCode
-.vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
 
-# dotenv environment variable files
-.env
-.env.development.local
-.env.test.local
-.env.production.local
-.env.local
+# ==========================================
+# OS
+# ==========================================
 
-# temp directory
-.temp
-.tmp
+.DS_Store
+Thumbs.db
 
-# Runtime data
-pids
+
+# ==========================================
+# Temporary Files
+# ==========================================
+
+.temp/
+.tmp/
+*.swp
+*.swo
+*.orig
+
+
+# ==========================================
+# Runtime Data
+# ==========================================
+
+pids/
 *.pid
 *.seed
 *.pid.lock
 
-# Diagnostic reports
-report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+# ==========================================
+# Diagnostic Reports
+# ==========================================
+
+report.*.*.*.*.json
