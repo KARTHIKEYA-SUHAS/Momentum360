@@ -102,7 +102,7 @@ export class WorkLocationController {
   }
 
   @Get('teams/:managerId')
-  @Roles(UserRole.ADMIN, UserRole.HR, UserRole.MANAGER)
+  @Roles(UserRole.ADMIN, UserRole.HR, UserRole.MANAGER, UserRole.EMPLOYEE)
   async getTeamAssignment(
     @Param('managerId') managerId: string,
     @CurrentUser() user: AuthenticatedUser,

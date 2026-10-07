@@ -2,32 +2,18 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Text, View } from "react-native";
 
 import type { MainTabParamList } from "./types";
+import ScreenHeader from "../components/ScreenHeader";
 
 import DashboardScreen from "../screens/dashboard/DashboardScreen";
+import EmployeesNavigator from "./EmployeesNavigator";
 import AttendanceScreen from "../screens/attendance/AttendanceScreen";
 import ProfileScreen from "../screens/profile/ProfileScreen";
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
-function ScreenHeader({
-  title,
-  subtitle,
-}: {
-  title: string;
-  subtitle: string;
-}) {
-  return (
-    <View className="bg-white px-5 pb-4 pt-16">
-      <Text className="text-2xl font-bold text-slate-900">{title}</Text>
-
-      <Text className="mt-1 text-sm text-slate-500">{subtitle}</Text>
-    </View>
-  );
-}
-
 function PlaceholderScreen({ title }: { title: string }) {
   return (
-    <View className="flex-1 items-center justify-center bg-slate-50">
+    <View className="items-center justify-center flex-1 bg-slate-50">
       <Text className="text-2xl font-bold text-slate-900">{title}</Text>
     </View>
   );
@@ -53,17 +39,11 @@ export default function MainNavigator() {
       {/* Employees */}
       <Tab.Screen
         name="Employees"
+        component={EmployeesNavigator}
         options={{
-          header: () => (
-            <ScreenHeader
-              title="Employees"
-              subtitle="Manage your organization's employees."
-            />
-          ),
+          headerShown: false,
         }}
-      >
-        {() => <PlaceholderScreen title="Employees" />}
-      </Tab.Screen>
+      />
 
       {/* Attendance */}
       <Tab.Screen

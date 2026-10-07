@@ -2,7 +2,10 @@ import {
   ConflictException,
   Injectable,
   NotFoundException,
+  OnModuleInit,
 } from '@nestjs/common';
+
+import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import { Repository } from 'typeorm';
@@ -10,21 +13,70 @@ import { Repository } from 'typeorm';
 import { User, UserRole } from './entities/user.entity.js';
 
 import { Organization } from '../organizations/entities/organization.entity.js';
-
 @Injectable()
-export class UsersService {
+export class UsersService implements OnModuleInit {
   constructor(
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
 
     @InjectRepository(Organization)
     private readonly organizationsRepository: Repository<Organization>,
+
+    private readonly configService: ConfigService,
   ) {}
 
-  async findByEmail(email: string): Promise<User | null> {
-    return this.usersRepository.findOne({
-      where: { email },
+  async onModuleInit() {
+    const email = this.configService.get<string>('INITIAL_ADMIN_EMAIL');
+    const password = this.configService.get<string>('INITIAL_ADMIN_PASSWORD');
+
+    if (!email || !password) {
+      return;
+    }
+
+    const existingAdmin = await this.usersRepository.findOne({
+      where: {
+        email,
+        role: UserRole.ADMIN,
+      },
     });
+
+    if (existingAdmin) {
+      return;
+    }
+
+    const organization = await this.organizationsRepository.findOne({
+      where: {
+        code: this.configService.get<string>('INITIAL_ORG_CODE'),
+      },
+    });
+
+    if (!organization) {
+      throw new NotFoundException(
+        'Initial organization not found while creating initial ADMIN',
+      );
+    }
+
+    const passwordHash = await bcrypt.hash(password, 12);
+
+    const admin = this.usersRepository.create({
+      organizationId: organization.id,
+      email,
+      passwordHash,
+      role: UserRole.ADMIN,
+      isActive: true,
+    });
+
+    await this.usersRepository.save(admin);
+
+    console.log(`Initial ADMIN created: ${email}`);
+  }
+
+  async findByEmail(email: string): Promise<User | null> {
+    return this.usersRepository
+      .createQueryBuilder('user')
+      .addSelect('user.passwordHash')
+      .where('user.email = :email', { email })
+      .getOne();
   }
 
   async findById(id: string): Promise<User | null> {

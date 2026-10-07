@@ -1,20 +1,37 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { Animated, PanResponder, Text, View } from "react-native";
 
 type SlideToCheckoutProps = {
   onComplete: () => void;
+  resetKey?: number;
 };
 
 const HANDLE_SIZE = 48;
 const TRACK_PADDING = 4;
 
-export default function SlideToCheckout({ onComplete }: SlideToCheckoutProps) {
+export default function SlideToCheckout({
+  onComplete,
+  resetKey,
+}: SlideToCheckoutProps) {
   const translateX = useRef(new Animated.Value(0)).current;
 
   const [trackWidth, setTrackWidth] = useState(0);
   const [completed, setCompleted] = useState(false);
 
   const trackWidthRef = useRef(0);
+
+  useEffect(() => {
+    if (resetKey === undefined) {
+      return;
+    }
+
+    setCompleted(false);
+
+    Animated.spring(translateX, {
+      toValue: 0,
+      useNativeDriver: true,
+    }).start();
+  }, [resetKey, translateX]);
 
   const panResponder = useRef(
     PanResponder.create({
@@ -67,7 +84,7 @@ export default function SlideToCheckout({ onComplete }: SlideToCheckoutProps) {
 
   return (
     <View
-      className="h-14 w-full overflow-hidden rounded-xl bg-slate-100"
+      className="w-full overflow-hidden h-14 rounded-xl bg-slate-100"
       onLayout={(event) => {
         const width = event.nativeEvent.layout.width;
 
@@ -85,7 +102,7 @@ export default function SlideToCheckout({ onComplete }: SlideToCheckoutProps) {
       {/* Sliding Handle */}
       <Animated.View
         {...panResponder.panHandlers}
-        className="absolute left-1 top-1 h-12 w-12 items-center justify-center rounded-lg bg-blue-600"
+        className="absolute items-center justify-center w-12 h-12 bg-blue-600 rounded-lg left-1 top-1"
         style={{
           transform: [{ translateX }],
         }}

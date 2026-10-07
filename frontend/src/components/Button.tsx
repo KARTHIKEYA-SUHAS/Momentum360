@@ -4,16 +4,19 @@ import {
   Text,
   type PressableProps,
 } from "react-native";
+import type { ReactNode } from "react";
 
 type ButtonProps = PressableProps & {
   title: string;
   loading?: boolean;
+  icon?: ReactNode;
 };
 
 export default function Button({
   title,
   loading = false,
   disabled,
+  icon,
   ...props
 }: ButtonProps) {
   const isDisabled = disabled || loading;
@@ -22,14 +25,17 @@ export default function Button({
     <Pressable
       {...props}
       disabled={isDisabled}
-      className={`h-12 items-center justify-center rounded-xl bg-blue-600 ${
+      className={`h-12 flex-row items-center justify-center rounded-3xl bg-blue-600 ${
         isDisabled ? "opacity-50" : "opacity-100"
       }`}
     >
       {loading ? (
         <ActivityIndicator color="#FFFFFF" />
       ) : (
-        <Text className="text-base font-semibold text-white">{title}</Text>
+        <>
+          {icon}
+          <Text className="text-base font-semibold text-white">{title}</Text>
+        </>
       )}
     </Pressable>
   );

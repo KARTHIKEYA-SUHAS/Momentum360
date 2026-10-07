@@ -21,6 +21,10 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "plugins": ["expo-secure-store", "expo-location"]
+    "plugins": [
+      "expo-secure-store",
+      "expo-location",
+      "@react-native-community/datetimepicker"
+    ]
   }
 }

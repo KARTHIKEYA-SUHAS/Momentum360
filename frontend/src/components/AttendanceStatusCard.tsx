@@ -10,6 +10,7 @@ type AttendanceStatusCardProps = {
   elapsedSeconds: number;
   onCheckIn: () => void;
   onCheckOut: () => void;
+  resetKey?: number;
 };
 
 export default function AttendanceStatusCard({
@@ -17,6 +18,7 @@ export default function AttendanceStatusCard({
   elapsedSeconds,
   onCheckIn,
   onCheckOut,
+  resetKey,
 }: AttendanceStatusCardProps) {
   const formatElapsedTime = () => {
     const hours = Math.floor(elapsedSeconds / 3600);
@@ -30,7 +32,7 @@ export default function AttendanceStatusCard({
   };
 
   return (
-    <View className="rounded-xl border border-slate-200 bg-white p-5">
+    <View className="p-5 bg-white border rounded-xl border-slate-200">
       <Text className="text-sm font-medium text-slate-500">Status</Text>
 
       <Text className="mt-2 text-xl font-semibold text-slate-900">
@@ -55,7 +57,7 @@ export default function AttendanceStatusCard({
 
       {status === "CHECKED_IN" && (
         <>
-          <View className="mt-6 items-center">
+          <View className="items-center mt-6">
             <View className="h-48 w-48 items-center justify-center rounded-full border-[12px] border-emerald-500">
               <Text className="text-3xl font-bold text-slate-900">
                 {formatElapsedTime()}
@@ -66,7 +68,7 @@ export default function AttendanceStatusCard({
           </View>
 
           <View className="mt-6">
-            <SlideToCheckout onComplete={onCheckOut} />
+            <SlideToCheckout onComplete={onCheckOut} resetKey={resetKey} />
           </View>
         </>
       )}
@@ -77,7 +79,7 @@ export default function AttendanceStatusCard({
             Attendance completed for today.
           </Text>
 
-          <View className="mt-6 rounded-xl bg-slate-50 p-4">
+          <View className="p-4 mt-6 rounded-xl bg-slate-50">
             <Text className="text-sm text-slate-500">Total Working Time</Text>
 
             <Text className="mt-1 text-2xl font-bold text-slate-900">

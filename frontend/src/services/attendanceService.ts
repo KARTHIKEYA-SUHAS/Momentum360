@@ -9,12 +9,36 @@ export type AttendanceStatus =
 
 export type AttendanceRecord = {
   id: string;
+  organizationId: string;
+
   employeeId: string;
+
+  employee: {
+    id: string;
+    userId: string | null;
+    employeeCode: string;
+    firstName: string;
+    lastName: string;
+    designation: string | null;
+    status: string;
+    isActive: boolean;
+  };
+
   attendanceDate: string;
   status: AttendanceStatus;
+
   checkIn: string | null;
   checkOut: string | null;
+
   workMode: string | null;
+
+  checkInLatitude: string | null;
+  checkInLongitude: string | null;
+
+  markedByUserId: string | null;
+
+  createdAt: string;
+  updatedAt: string;
 };
 
 export async function getAttendance(): Promise<AttendanceRecord[]> {

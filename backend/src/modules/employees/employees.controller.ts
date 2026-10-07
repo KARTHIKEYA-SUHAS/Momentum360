@@ -45,6 +45,12 @@ export class EmployeesController {
     return this.employeesService.findAll(user.organizationId);
   }
 
+  @Get('next-code')
+  @Roles(UserRole.ADMIN, UserRole.HR)
+  getNextEmployeeCode(@CurrentUser() user: AuthenticatedUser) {
+    return this.employeesService.getNextEmployeeCode(user.organizationId);
+  }
+
   @Get(':id')
   @Roles(UserRole.ADMIN, UserRole.HR, UserRole.MANAGER, UserRole.EMPLOYEE)
   findOne(@CurrentUser() user: AuthenticatedUser, @Param('id') id: string) {

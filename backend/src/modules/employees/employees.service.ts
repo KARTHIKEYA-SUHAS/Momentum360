@@ -131,6 +131,7 @@ export class EmployeesService {
         organizationId,
       },
       relations: {
+        user: true,
         department: true,
         manager: true,
       },
@@ -139,6 +140,24 @@ export class EmployeesService {
         lastName: 'ASC',
       },
     });
+  }
+
+  async getNextEmployeeCode(organizationId: string): Promise<string> {
+    const result = await this.employeesRepository
+      .createQueryBuilder('employee')
+      .select(
+        'MAX(CAST(SUBSTRING(employee.employee_code FROM 4) AS INTEGER))',
+        'maxNumber',
+      )
+      .where('employee.organization_id = :organizationId', {
+        organizationId,
+      })
+      .andWhere("employee.employee_code ~ '^EMP[0-9]+$'")
+      .getRawOne<{ maxNumber: string | null }>();
+
+    const nextNumber = Number(result?.maxNumber ?? 0) + 1;
+
+    return `EMP${String(nextNumber).padStart(3, '0')}`;
   }
 
   async findOne(organizationId: string, id: string) {
